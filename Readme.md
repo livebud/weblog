@@ -27,6 +27,19 @@ Since this repository is acting as a "canary" for future features, **[please sha
 
 ## Install
 
+**Prerequisite**
+
+1. [`direnv`](https://direnv.net/docs/installation.html)
+2. go >= 1.18
+3. Install the following tools to your go path
+
+```sh
+$ go install github.com/matthewmueller/migrate/cmd/migrate
+$ go install github.com/matthewmueller/pogo/cmd/pogo
+```
+
+**Setup**
+
 ```sh
 # Install go dependencies
 go mod tidy
