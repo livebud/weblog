@@ -1,0 +1,9 @@
+<h1>Hey {{ $.Name }}!</h1>
+
+<hr />
+
+<form method="post" action="/logout">
+  <input type="hidden" name="gorilla.csrf.Token" value="{{ $.CSRF }}" />
+  <input type="hidden" name="_method" value="delete" />
+  <input type="submit" value="Logout">
+</form>

@@ -1,0 +1,10 @@
+<h2>Login</h2>
+
+<form method="post" action="/login">
+  <input type="hidden" name="gorilla.csrf.Token" value="{{ $.CSRF }}">
+  <input type="text" value="matt@gmail.com" name="email" placeholder="email" /><br/><br/>
+  <input type="password" value="testtest" name="password" placeholder="password" /><br/><br/>
+  <input type="submit" value="Login" />
+</form>
+
+<a href="/signup">Signup</a>
