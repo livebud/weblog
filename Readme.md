@@ -4,11 +4,11 @@
 
 Weblog is a minimal blog that will serve as a real-world example project for Bud.
 
-Blogs are expecially good examples because they're fairly easy to build, but demonstrate a lot of the fundamental capabilities you'd need for nearly every website you build.
+Blogs are expecially good examples because they're fairly easy to build, but demonstrate a lot of the fundamental capabilities you'd need to build any website.
 
 Much of the code in here will make its way into Bud either through runtime libraries or code generation.
 
-This initial blog took me about 8 hours to write, I hope in the future with Bud, the same blog will take an hour or two. I plan to slowly transition this repository over to Bud as the necessary features are added.
+This initial blog took me about 8 hours to write. I hope in the future with Bud, the same blog will take an hour or two. I plan to slowly transition this repo over to Bud as required features are added.
 
 Since this repository is acting as a "canary" for future features, **[please share your feedback](https://github.com/livebud/weblog/issues/new)** on areas in the codebase that you find confusing or don't like! Also if you find features in here that aren't in Bud, consider contributing them to Bud with a PR!
 
@@ -26,8 +26,6 @@ Since this repository is acting as a "canary" for future features, **[please sha
 - CSRF protection
 
 ## Install
-
-You'll need to have a Postgres database called weblog:
 
 ```sh
 # Install go dependencies
