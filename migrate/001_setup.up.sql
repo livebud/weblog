@@ -30,7 +30,7 @@ create table posts (
   slug text not null unique,
   body text not null,
   status post_status not null default 'draft',
-  created_at timestamp not null default now(),
-  updated_at timestamp not null default now()
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now()
 );
 create trigger updated_at before update on posts for each row execute procedure set_updated_at();
