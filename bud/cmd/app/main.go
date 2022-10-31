@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/gorilla/sessions"
@@ -38,6 +37,7 @@ func run() error {
 	defer db.Close()
 	cookieStore := sessions.NewCookieStore([]byte(env.SessionKey))
 	handler := web.New(db, env, router.New(), cookieStore)
-	console.Info("Listening on http://localhost:3000")
-	return http.ListenAndServe(":3000", handler)
+	server := web.NewServer(env, handler)
+	console.Info("Listening on http://localhost" + env.ListenAddr)
+	return server.ListenAndServe()
 }

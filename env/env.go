@@ -11,6 +11,7 @@ func Load() (e *Env, err error) {
 }
 
 type Env struct {
+	ListenAddr  string `env:"LISTEN_ADDR" envDefault:":3000"`
 	DatabaseURL string `env:"DATABASE_URL,required"`
 	CSRFToken   string `env:"CSRF_TOKEN,required"`
 	SessionKey  string `env:"SESSION_KEY,required"`

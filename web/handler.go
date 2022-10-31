@@ -72,3 +72,12 @@ func New(db pogo.DB, env *env.Env, r *router.Router, sessionStore session.Store)
 }
 
 type Handler = http.Handler
+
+func NewServer(env *env.Env, handler Handler) *Server {
+	return &http.Server{
+		Addr:    env.ListenAddr,
+		Handler: handler,
+	}
+}
+
+type Server = http.Server
