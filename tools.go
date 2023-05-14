@@ -1,7 +1,7 @@
 //go:build tools
 // +build tools
 
-package blog
+package main
 
 import (
 	_ "github.com/matthewmueller/migrate/cmd/migrate"
