@@ -15,11 +15,6 @@ func provideModel(in di.Injector) (*post.Model, error) {
 	return &post.Model{}, nil
 }
 
-// func provide() (*posts.Controller, error) {
-// 	fmt.Println("custom provider")
-// 	return posts.New(nil, nil, nil, nil), nil
-// }
-
 func TestPosts(t *testing.T) {
 	in := injector.New()
 	di.Provide[*post.Model](in, provideModel)
