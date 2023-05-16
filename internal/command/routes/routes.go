@@ -9,15 +9,21 @@ import (
 	"github.com/matthewmueller/bud/web/router"
 )
 
-func Register(in di.Injector, cli cli.Command) error {
-	// db, err := di.Load[db.DB](in)
-	// if err != nil {
-	// 	return err
-	// }
-	// _ = db
-	cmd := New(nil)
-	cli = cli.Command("routes", "list the routes")
-	cli.Run(cmd.Routes)
+func Provide(in di.Injector) (*Command, error) {
+	router, err := di.Load[*router.Router](in)
+	if err != nil {
+		return nil, err
+	}
+	return New(router), nil
+}
+
+func Register(in di.Injector, cli *cli.CLI) error {
+	cmd, err := di.Load[*Command](in)
+	if err != nil {
+		return err
+	}
+	sub := cli.Command("routes", "list the routes")
+	sub.Run(cmd.Routes)
 	return nil
 }
 
@@ -30,6 +36,8 @@ type Command struct {
 }
 
 func (c *Command) Routes(ctx context.Context) error {
-	fmt.Println("routes!")
+	for _, route := range c.router.List() {
+		fmt.Println(route.Method, route.Path, route.Name)
+	}
 	return nil
 }

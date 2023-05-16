@@ -6,6 +6,8 @@ import (
 
 	"github.com/livebud/weblog/bud/pkg/table/enum"
 	"github.com/livebud/weblog/bud/pkg/table/user"
+	"github.com/matthewmueller/bud/di"
+	"github.com/matthewmueller/bud/web/router"
 	"github.com/xeonx/timeago"
 
 	"github.com/gorilla/sessions"
@@ -16,6 +18,41 @@ import (
 	"github.com/livebud/weblog/view/posts"
 	"gopkg.in/go-playground/validator.v9"
 )
+
+func Provide(in di.Injector) (*Controller, error) {
+	db, err := di.Load[pogo.DB](in)
+	if err != nil {
+		return nil, err
+	}
+	model, err := di.Load[*post.Model](in)
+	if err != nil {
+		return nil, err
+	}
+	store, err := di.Load[sessions.Store](in)
+	if err != nil {
+		return nil, err
+	}
+	view, err := di.Load[*posts.View](in)
+	if err != nil {
+		return nil, err
+	}
+	return New(db, model, store, view), nil
+}
+
+func Register(in di.Injector, router *router.Router) error {
+	controller, err := di.Load[*Controller](in)
+	if err != nil {
+		return err
+	}
+	router.Get("/", controller.Index)
+	router.Get("/new", controller.New)
+	router.Post("/", controller.Create)
+	router.Get("/:slug", controller.Show)
+	router.Get("/:slug/edit", controller.Edit)
+	router.Patch("/:slug", controller.Update)
+	router.Delete("/:slug", controller.Delete)
+	return nil
+}
 
 func New(db pogo.DB, model *post.Model, store sessions.Store, view *posts.View) *Controller {
 	return &Controller{db, model, store, view}

@@ -9,14 +9,21 @@ import (
 	"github.com/matthewmueller/bud/di"
 )
 
-func Register(in di.Injector, cli cli.Command) error {
+func Provide(in di.Injector) (*Command, error) {
 	db, err := di.Load[db.DB](in)
+	if err != nil {
+		return nil, err
+	}
+	return New(db), nil
+}
+
+func Register(in di.Injector, cli *cli.CLI) error {
+	cmd, err := di.Load[*Command](in)
 	if err != nil {
 		return err
 	}
-	cmd := New(db)
-	cli = cli.Command("seed", "seed the database")
-	cli.Run(cmd.Seed)
+	sub := cli.Command("seed", "seed the database")
+	sub.Run(cmd.Seed)
 	return nil
 }
 

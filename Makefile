@@ -10,4 +10,4 @@ migrate.reset:
 	@ $(MAKE) pogo
 
 pogo:
-	@ $(pogo) --db $(DATABASE_URL) --dir bud/pkg/table
+	@ pogo --db $(DATABASE_URL) --dir bud/pkg/table

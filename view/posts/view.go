@@ -5,7 +5,12 @@ import (
 	"net/http"
 
 	"github.com/livebud/weblog/internal/gohtml"
+	"github.com/matthewmueller/bud/di"
 )
+
+func Provide(in di.Injector) (*View, error) {
+	return Load(), nil
+}
 
 func Load() *View {
 	return &View{
