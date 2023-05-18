@@ -10,6 +10,7 @@ import (
 	"github.com/livebud/weblog/controller/posts"
 	"github.com/livebud/weblog/internal/command/routes"
 	"github.com/livebud/weblog/internal/command/seed"
+	"github.com/livebud/weblog/view"
 	postsview "github.com/livebud/weblog/view/posts"
 	"github.com/matthewmueller/bud/cli"
 	"github.com/matthewmueller/bud/di"
@@ -21,6 +22,7 @@ func New() di.Injector {
 	in := injector.New()
 	pogo.Provider(in)
 	post.Provider(in)
+	view.Provider(in)
 	di.Provide[*seed.Command](in, seed.Provide)
 	di.Register[*cli.CLI](in, seed.Register)
 	di.Provide[*routes.Command](in, routes.Provide)

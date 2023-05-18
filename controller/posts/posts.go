@@ -2,10 +2,10 @@ package posts
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/livebud/weblog/bud/pkg/table/enum"
 	"github.com/livebud/weblog/bud/pkg/table/user"
+	"github.com/livebud/weblog/view"
 	"github.com/matthewmueller/bud/di"
 	"github.com/matthewmueller/bud/web/router"
 	"github.com/xeonx/timeago"
@@ -32,11 +32,15 @@ func Provide(in di.Injector) (*Controller, error) {
 	if err != nil {
 		return nil, err
 	}
-	view, err := di.Load[*posts.View](in)
+	postView, err := di.Load[*posts.View](in)
 	if err != nil {
 		return nil, err
 	}
-	return New(db, model, store, view), nil
+	view, err := di.Load[view.View](in)
+	if err != nil {
+		return nil, err
+	}
+	return New(db, model, store, postView, view), nil
 }
 
 func Register(in di.Injector, router *router.Router) error {
@@ -54,15 +58,16 @@ func Register(in di.Injector, router *router.Router) error {
 	return nil
 }
 
-func New(db pogo.DB, model *post.Model, store sessions.Store, view *posts.View) *Controller {
-	return &Controller{db, model, store, view}
+func New(db pogo.DB, model *post.Model, store sessions.Store, postView *posts.View, view view.View) *Controller {
+	return &Controller{db, model, store, postView, view}
 }
 
 type Controller struct {
-	db      pogo.DB
-	model   *post.Model
-	session sessions.Store
-	view    *posts.View
+	db       pogo.DB
+	model    *post.Model
+	session  sessions.Store
+	postView *posts.View
+	view     view.View
 }
 
 func (c *Controller) Index(w http.ResponseWriter, r *http.Request) {
@@ -75,24 +80,34 @@ func (c *Controller) Index(w http.ResponseWriter, r *http.Request) {
 	if _, ok := session.Values["user_id"].(int); ok {
 		loggedIn = true
 	}
+	_ = loggedIn
+	// ^^^ should go in middleware
 	allPosts, err := c.model.FindMany(c.db, post.NewOrder().CreatedAt(post.DESC))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	var indexPosts []*posts.IndexPost
-	for _, post := range allPosts {
-		indexPosts = append(indexPosts, &posts.IndexPost{
-			Title:     post.Title,
-			Slug:      post.Slug,
-			CreatedAt: post.CreatedAt.Format(time.Kitchen),
-		})
+	props := map[string]any{
+		"Title": "Posts Index",
+		"Posts": allPosts,
 	}
-	c.view.Index.Render(w, &posts.Index{
-		CSRF:     csrf.Token(r),
-		LoggedIn: loggedIn,
-		Posts:    indexPosts,
-	})
+	if err := c.view.Render(r.Context(), w, "posts/index", props); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	// var indexPosts []*posts.IndexPost
+	// for _, post := range allPosts {
+	// 	indexPosts = append(indexPosts, &posts.IndexPost{
+	// 		Title:     post.Title,
+	// 		Slug:      post.Slug,
+	// 		CreatedAt: post.CreatedAt.Format(time.Kitchen),
+	// 	})
+	// }
+	// c.postView.Index.Render(w, &posts.Index{
+	// 	CSRF:     csrf.Token(r),
+	// 	LoggedIn: loggedIn,
+	// 	Posts:    indexPosts,
+	// })
 }
 
 func (c *Controller) IndexJSON(w http.ResponseWriter, r *http.Request) {
@@ -113,7 +128,7 @@ func (c *Controller) New(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
-	c.view.New.Render(w, &posts.New{
+	c.postView.New.Render(w, &posts.New{
 		CSRF: csrf.Token(r),
 	})
 }
@@ -192,7 +207,7 @@ func (c *Controller) Show(w http.ResponseWriter, r *http.Request) {
 	if userID, ok := session.Values["user_id"].(int); ok && userID == author.ID {
 		isAuthor = true
 	}
-	if err := c.view.Show.Render(w, &posts.Show{
+	if err := c.postView.Show.Render(w, &posts.Show{
 		CSRF: csrf.Token(r),
 		Post: &posts.ShowPost{
 			Title:      post.Title,
@@ -248,7 +263,7 @@ func (c *Controller) Edit(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Redirect(w, r, "/"+post.Slug, http.StatusFound)
 	}
-	if err := c.view.Edit.Render(w, &posts.Edit{
+	if err := c.postView.Edit.Render(w, &posts.Edit{
 		CSRF: csrf.Token(r),
 		Post: &posts.EditPost{
 			Title:      post.Title,

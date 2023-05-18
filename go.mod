@@ -7,9 +7,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.3
 	github.com/gorilla/csrf v1.7.1
 	github.com/gorilla/sessions v1.2.1
-	github.com/jackc/pgconn v1.14.0
 	github.com/jackc/pgx v3.6.2+incompatible
-	github.com/jackc/pgx/v5 v5.3.1
 	github.com/livebud/bud v0.2.5
 	github.com/matthewmueller/bud v0.0.0-00010101000000-000000000000
 	github.com/matthewmueller/migrate v0.0.0-20210914174331-dc7c5047e7b2
@@ -20,6 +18,7 @@ require (
 )
 
 require (
+	github.com/RyanCarrier/dijkstra v1.2.0 // indirect
 	github.com/ajg/form v1.5.2-0.20200323032839-9aeb3cf462e1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
@@ -35,11 +34,9 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/howeyc/gopass v0.0.0-20190910152052-7cb4b85ec19c // indirect
-	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
-	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgproto3/v2 v2.3.2 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
+	github.com/jackc/pgx/v5 v5.3.1 // indirect
 	github.com/kevinburke/go-bindata v3.23.0+incompatible // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lib/pq v1.10.7 // indirect
