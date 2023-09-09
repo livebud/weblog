@@ -4,6 +4,7 @@ import (
 	"embed"
 	"os"
 
+	"github.com/livebud/weblog/view/posts"
 	"github.com/matthewmueller/bud/di"
 	"github.com/matthewmueller/bud/view"
 )
@@ -26,13 +27,20 @@ type View = view.View
 func Provider(in di.Injector) {
 	di.Provide[view.FS](in, provideFS)
 	di.Provide[view.Pages](in, providePages)
+	di.Register[*view.Viewer](in, posts.Register)
+	// di.Provide[posts.]
 }
 
 func provideFS(in di.Injector) (view.FS, error) {
-	return os.DirFS("view"), nil
+	_ = fsys
 	// return fsys, nil
+	return os.DirFS("view"), nil
 }
 
 func providePages(in di.Injector) (view.Pages, error) {
 	return pages, nil
+}
+
+type Layout struct {
+	Title string
 }

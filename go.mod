@@ -9,10 +9,10 @@ require (
 	github.com/gorilla/sessions v1.2.1
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/livebud/bud v0.2.5
+	github.com/matryer/is v1.4.1
 	github.com/matthewmueller/bud v0.0.0-00010101000000-000000000000
 	github.com/matthewmueller/migrate v0.0.0-20210914174331-dc7c5047e7b2
 	github.com/matthewmueller/pogo v0.0.0-20221017040750-8729eba51d9e
-	github.com/xeonx/timeago v1.0.0-rc5
 	golang.org/x/crypto v0.8.0
 	gopkg.in/go-playground/validator.v9 v9.31.0
 )
@@ -23,6 +23,7 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/apex/log v1.9.0 // indirect
+	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813 // indirect
@@ -52,7 +53,9 @@ require (
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09 // indirect
 	github.com/tj/go-prompt v1.3.0 // indirect
 	github.com/tj/kingpin v2.5.0+incompatible // indirect
+	github.com/xlab/treeprint v1.2.0 // indirect
 	github.com/xo/dburl v0.14.2 // indirect
+	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/term v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect

@@ -4,18 +4,15 @@ import (
 	"net/http"
 
 	"github.com/livebud/weblog/bud/pkg/table/enum"
-	"github.com/livebud/weblog/bud/pkg/table/user"
 	"github.com/livebud/weblog/view"
+	"github.com/livebud/weblog/view/posts"
 	"github.com/matthewmueller/bud/di"
 	"github.com/matthewmueller/bud/web/router"
-	"github.com/xeonx/timeago"
 
 	"github.com/gorilla/sessions"
 	"github.com/livebud/bud/framework/controller/controllerrt/request"
 	pogo "github.com/livebud/weblog/bud/pkg/table"
 	"github.com/livebud/weblog/bud/pkg/table/post"
-	"github.com/livebud/weblog/middleware/csrf"
-	"github.com/livebud/weblog/view/posts"
 	"gopkg.in/go-playground/validator.v9"
 )
 
@@ -32,15 +29,15 @@ func Provide(in di.Injector) (*Controller, error) {
 	if err != nil {
 		return nil, err
 	}
-	postView, err := di.Load[*posts.View](in)
-	if err != nil {
-		return nil, err
-	}
+	// postView, err := di.Load[*posts.View](in)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	view, err := di.Load[view.View](in)
 	if err != nil {
 		return nil, err
 	}
-	return New(db, model, store, postView, view), nil
+	return New(db, model, store, view), nil
 }
 
 func Register(in di.Injector, router *router.Router) error {
@@ -49,25 +46,25 @@ func Register(in di.Injector, router *router.Router) error {
 		return err
 	}
 	router.Get("/", controller.Index)
-	router.Get("/new", controller.New)
+	// router.Get("/new", controller.New)
 	router.Post("/", controller.Create)
-	router.Get("/:slug", controller.Show)
-	router.Get("/:slug/edit", controller.Edit)
+	// router.Get("/:slug", controller.Show)
+	// router.Get("/:slug/edit", controller.Edit)
 	router.Patch("/:slug", controller.Update)
 	router.Delete("/:slug", controller.Delete)
 	return nil
 }
 
-func New(db pogo.DB, model *post.Model, store sessions.Store, postView *posts.View, view view.View) *Controller {
-	return &Controller{db, model, store, postView, view}
+func New(db pogo.DB, model *post.Model, store sessions.Store, view view.View) *Controller {
+	return &Controller{db, model, store, view}
 }
 
 type Controller struct {
-	db       pogo.DB
-	model    *post.Model
-	session  sessions.Store
-	postView *posts.View
-	view     view.View
+	db      pogo.DB
+	model   *post.Model
+	session sessions.Store
+	// postView *posts.View
+	view view.View
 }
 
 func (c *Controller) Index(w http.ResponseWriter, r *http.Request) {
@@ -87,10 +84,14 @@ func (c *Controller) Index(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	props := map[string]any{
-		"Title": "Posts Index",
-		"Posts": allPosts,
+	props := posts.Index{
+		Posts: allPosts,
 	}
+	// props := map[string]any{
+	// 	"Title": "Posts Index",
+	// 	"Posts": allPosts,
+	// }
+	// res.Render[posts.Index]()
 	if err := c.view.Render(r.Context(), w, "posts/index", props); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -116,22 +117,22 @@ func (c *Controller) IndexJSON(w http.ResponseWriter, r *http.Request) {
 	// render json
 }
 
-func (c *Controller) New(w http.ResponseWriter, r *http.Request) {
-	session, err := c.session.Get(r, "user")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	// Ensure we're logged in
-	_, ok := session.Values["user_id"].(int)
-	if !ok {
-		http.Redirect(w, r, "/login", http.StatusFound)
-		return
-	}
-	c.postView.New.Render(w, &posts.New{
-		CSRF: csrf.Token(r),
-	})
-}
+// func (c *Controller) New(w http.ResponseWriter, r *http.Request) {
+// 	session, err := c.session.Get(r, "user")
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// 	// Ensure we're logged in
+// 	_, ok := session.Values["user_id"].(int)
+// 	if !ok {
+// 		http.Redirect(w, r, "/login", http.StatusFound)
+// 		return
+// 	}
+// 	c.postView.New.Render(w, &posts.New{
+// 		CSRF: csrf.Token(r),
+// 	})
+// }
 
 var valid = validator.New()
 
@@ -176,109 +177,109 @@ func (c *Controller) CreateJSON(w http.ResponseWriter, r *http.Request) {
 	// render json
 }
 
-func (c *Controller) Show(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Slug string `json:"slug" validate:"required"`
-	}
-	if err := request.Unmarshal(r, &input); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if err := valid.Struct(input); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	post, err := c.model.FindBySlug(c.db, input.Slug)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	author, err := user.FindByID(c.db, post.AuthorID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	session, err := c.session.Get(r, "user")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	isAuthor := false
-	if userID, ok := session.Values["user_id"].(int); ok && userID == author.ID {
-		isAuthor = true
-	}
-	if err := c.postView.Show.Render(w, &posts.Show{
-		CSRF: csrf.Token(r),
-		Post: &posts.ShowPost{
-			Title:      post.Title,
-			Slug:       post.Slug,
-			Body:       post.Body,
-			Status:     string(post.Status),
-			Author:     author.Name,
-			IsAuthor:   isAuthor,
-			CreatedAgo: timeago.English.Format(post.CreatedAt),
-		},
-	}); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
+// func (c *Controller) Show(w http.ResponseWriter, r *http.Request) {
+// 	var input struct {
+// 		Slug string `json:"slug" validate:"required"`
+// 	}
+// 	if err := request.Unmarshal(r, &input); err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// 	if err := valid.Struct(input); err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// 	post, err := c.model.FindBySlug(c.db, input.Slug)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// 	author, err := user.FindByID(c.db, post.AuthorID)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// 	session, err := c.session.Get(r, "user")
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// 	isAuthor := false
+// 	if userID, ok := session.Values["user_id"].(int); ok && userID == author.ID {
+// 		isAuthor = true
+// 	}
+// 	if err := c.postView.Show.Render(w, &posts.Show{
+// 		CSRF: csrf.Token(r),
+// 		Post: &posts.ShowPost{
+// 			Title:      post.Title,
+// 			Slug:       post.Slug,
+// 			Body:       post.Body,
+// 			Status:     string(post.Status),
+// 			Author:     author.Name,
+// 			IsAuthor:   isAuthor,
+// 			CreatedAgo: timeago.English.Format(post.CreatedAt),
+// 		},
+// 	}); err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// }
 
-func (c *Controller) ShowJSON(w http.ResponseWriter, r *http.Request) {
-	// validate the input
-	// fetch the resource
-	// render json
-}
+// func (c *Controller) ShowJSON(w http.ResponseWriter, r *http.Request) {
+// 	// validate the input
+// 	// fetch the resource
+// 	// render json
+// }
 
-func (c *Controller) Edit(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Slug string `json:"slug" validate:"required"`
-	}
-	if err := request.Unmarshal(r, &input); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if err := valid.Struct(input); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	post, err := c.model.FindBySlug(c.db, input.Slug)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	author, err := user.FindByID(c.db, post.AuthorID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	session, err := c.session.Get(r, "user")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	isAuthor := false
-	if userID, ok := session.Values["user_id"].(int); ok && userID == author.ID {
-		isAuthor = true
-	} else {
-		http.Redirect(w, r, "/"+post.Slug, http.StatusFound)
-	}
-	if err := c.postView.Edit.Render(w, &posts.Edit{
-		CSRF: csrf.Token(r),
-		Post: &posts.EditPost{
-			Title:      post.Title,
-			Slug:       post.Slug,
-			Body:       post.Body,
-			Status:     string(post.Status),
-			Author:     author.Name,
-			IsAuthor:   isAuthor,
-			CreatedAgo: timeago.English.Format(post.CreatedAt),
-		},
-	}); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
+// func (c *Controller) Edit(w http.ResponseWriter, r *http.Request) {
+// 	var input struct {
+// 		Slug string `json:"slug" validate:"required"`
+// 	}
+// 	if err := request.Unmarshal(r, &input); err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// 	if err := valid.Struct(input); err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// 	post, err := c.model.FindBySlug(c.db, input.Slug)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// 	author, err := user.FindByID(c.db, post.AuthorID)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// 	session, err := c.session.Get(r, "user")
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// 	isAuthor := false
+// 	if userID, ok := session.Values["user_id"].(int); ok && userID == author.ID {
+// 		isAuthor = true
+// 	} else {
+// 		http.Redirect(w, r, "/"+post.Slug, http.StatusFound)
+// 	}
+// 	if err := c.postView.Edit.Render(w, &posts.Edit{
+// 		CSRF: csrf.Token(r),
+// 		Post: &posts.EditPost{
+// 			Title:      post.Title,
+// 			Slug:       post.Slug,
+// 			Body:       post.Body,
+// 			Status:     string(post.Status),
+// 			Author:     author.Name,
+// 			IsAuthor:   isAuthor,
+// 			CreatedAgo: timeago.English.Format(post.CreatedAt),
+// 		},
+// 	}); err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// }
 
 func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 	var input struct {

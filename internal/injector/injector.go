@@ -11,11 +11,10 @@ import (
 	"github.com/livebud/weblog/internal/command/routes"
 	"github.com/livebud/weblog/internal/command/seed"
 	"github.com/livebud/weblog/view"
-	postsview "github.com/livebud/weblog/view/posts"
 	"github.com/matthewmueller/bud/cli"
 	"github.com/matthewmueller/bud/di"
 	"github.com/matthewmueller/bud/injector"
-	"github.com/matthewmueller/bud/web/router"
+	"github.com/matthewmueller/bud/router"
 )
 
 func New() di.Injector {
@@ -28,9 +27,11 @@ func New() di.Injector {
 	di.Provide[*routes.Command](in, routes.Provide)
 	di.Register[*cli.CLI](in, routes.Register)
 	di.Provide[*posts.Controller](in, posts.Provide)
-	di.Register[*router.Router](in, posts.Register)
+	// di.Register[*router.Router](in, posts.Register)
 	di.Provide[sessions.Store](in, provideSessions)
-	di.Provide[*postsview.View](in, postsview.Provide)
+	di.Provide(in, provideRouter)
+	di.Register[router.Router](in, registerPosts)
+	// di.Provide[*postsview.View](in, postsview.Provide)
 	return in
 }
 
@@ -40,4 +41,13 @@ func provideSessions(in di.Injector) (sessions.Store, error) {
 		return nil, errors.New("SESSION_KEY is required")
 	}
 	return sessions.NewCookieStore([]byte(sessionKey)), nil
+}
+
+func provideRouter(in di.Injector) (*router.Router, error) {
+	r := router.New()
+	return r, nil
+}
+
+func registerPosts(in di.Injector, r router.Router) error {
+	return nil
 }
